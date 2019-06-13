@@ -27,7 +27,7 @@ public class Main {
    */
    
     
-    int nNodos = 10, nAristas = 20, dirigido = 0, ciclo = 0, dAristas = 5;
+    int nNodos = 10, nAristas = 16, dirigido = 0, ciclo = 0, dAristas = 5;
     double p = 0.01, disr = 0.3;
     String auxDirigido, auxCiclo;
    
@@ -136,8 +136,8 @@ public class Main {
    JOptionPane.showMessageDialog(null, "Gráfo con pesos", "Atención", JOptionPane.INFORMATION_MESSAGE);    
    grafo.pesosAristas(grafo, min, max, entero);
    //grafo.Dijkstra (grafo, raiz);
-   
-   grafo.Kruskal_D (grafo, raiz);
+   //grafo.Kruskal_D (grafo);
+   grafo.Kruskal_I (grafo);
  
     }
     

@@ -15,14 +15,26 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import static java.util.Map.Entry.comparingByValue;
 import java.util.PriorityQueue;
 import java.util.Random;
 import java.util.Set;
+import static java.util.stream.Collectors.toMap;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+
+
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import static java.util.stream.Collectors.*;
+import static java.util.Map.Entry.*;
 
 
 /**
@@ -36,6 +48,8 @@ public class Metodo implements Cloneable{
     HashMap<Integer, Arista> nuevasAristas = new HashMap<>();
     LinkedList<String> visitadosR = new LinkedList();
     LinkedList<String> recorridosR = new LinkedList();
+    LinkedList<String> visitadosRKI = new LinkedList();
+    LinkedList<String> recorridosRKI = new LinkedList();
     int NaR = 0;
     HashMap<String, Float> pesoArista = new HashMap<>();
     
@@ -728,7 +742,7 @@ public class Metodo implements Cloneable{
                 Nodo a = anode.get(1);
                 Nodo b = anode.get(2);
                 
-                pesoArista.put( Integer.toString(a.obtenIdentificador())+Integer.toString(b.obtenIdentificador()), arista.obtenPeso());
+                pesoArista.put( Integer.toString(a.obtenIdentificador())+"-"+Integer.toString(b.obtenIdentificador()), arista.obtenPeso());
                    
                     out.println("   \"" + a.obtenIdentificador() + "\"--\"" + b.obtenIdentificador() + "\"[label = \""+ arista.obtenPeso() + "\"]");
                     out.flush();
@@ -795,7 +809,7 @@ public class Metodo implements Cloneable{
             
             for (int a = 0; a < nuevosNodos.size();a++){
                 if (conectados.contains(a)){
-                String prueba =Integer.toString(A.obtenIdentificador()) + Integer.toString(a);
+                String prueba =Integer.toString(A.obtenIdentificador())+"-"+ Integer.toString(a);
                     if (pesoArista.get(prueba) != null){                 
                         pesoActual = pesoArista.get(prueba);
                         pesoNuevo = pesoActual+pesoNodo.get(A.obtenIdentificador());
@@ -812,7 +826,7 @@ public class Metodo implements Cloneable{
                     }
 
                     if (pesoArista.get(prueba) == null){
-                        prueba = Integer.toString(a) + A.obtenIdentificador();                 
+                        prueba = Integer.toString(a)+"-"+ A.obtenIdentificador();                 
                         pesoActual = pesoArista.get(prueba);
                         pesoNuevo = pesoActual+pesoNodo.get(A.obtenIdentificador());
                         if (pesoNodo.get(a) > pesoNuevo){
@@ -853,11 +867,11 @@ public class Metodo implements Cloneable{
                 Nodo a = anode.get(1);
                 Nodo b = anode.get(2);
                 
-                String oPeso = Integer.toString(a.obtenIdentificador()) + Integer.toString(b.obtenIdentificador());
+                String oPeso = Integer.toString(a.obtenIdentificador())+"-"+ Integer.toString(b.obtenIdentificador());
                 if (pesoArista.get(oPeso) != null)
                     out.println("   \"" + a.obtenIdentificador() +", "+pesoNodo.get((int)a.obtenIdentificador())+ "\"--\"" + b.obtenIdentificador() +", "+pesoNodo.get((int)b.obtenIdentificador())+ "\"[label = \""+ pesoArista.get(oPeso) + "\"]");
                 else{
-                    oPeso = Integer.toString(b.obtenIdentificador()) + Integer.toString(a.obtenIdentificador());
+                    oPeso = Integer.toString(b.obtenIdentificador())+"-"+ Integer.toString(a.obtenIdentificador());
                     out.println("   \"" + a.obtenIdentificador() +", "+pesoNodo.get((int)a.obtenIdentificador())+ "\"--\"" + b.obtenIdentificador() +", "+pesoNodo.get((int)b.obtenIdentificador())+ "\"[label = \""+ pesoArista.get(oPeso) + "\"]");
                 }
                 out.flush();
@@ -879,7 +893,265 @@ public class Metodo implements Cloneable{
         return 1;
     }
     
+    public int Kruskal_D (Metodo grafo){
+        nuevosNodos.putAll(Nodos);
+        nuevasAristas.clear();
+        //Nodo A = nuevosNodos.get(a);
+        HashMap<String, Float> pesoAristaKruskal = new HashMap<>();
+        LinkedList<String> recupera = new LinkedList();
+        LinkedList<String> recorridos = new LinkedList();
+        //LinkedList<Integer>  conectados = null;
+        int nArista = -1, x = 0, y = 0, pesoTotal = 0;
+        String nombre;
+     
+        
+        pesoAristaKruskal.putAll(pesoArista);
+     //Ordena pesos   
+        Map<String, Float> pesoAscendente = pesoAristaKruskal
+        .entrySet()
+        .stream()
+        .sorted(comparingByValue())
+        .collect( 
+                toMap(e -> e.getKey(), e -> e.getValue(), (e1, e2) -> e2,
+                LinkedHashMap::new));
+        
+        System.out.println("Orden de las aristas: "+pesoAscendente);
+        Set setF = pesoAscendente.entrySet();
+        Iterator iterador1 = setF.iterator();
+        while(iterador1.hasNext()){
+            Map.Entry me =(Map.Entry)iterador1.next();
+            recupera.add(""+me.getKey());
+            String aux = recupera.pollFirst();
+            
+            System.out.println ("Auxiliar : "+aux);
+            String[] parte = aux.split("-");
+            x = Integer.parseInt(parte[0]);
+            y = Integer.parseInt(parte[1]);
+            //if(!recorridos.contains(""+aux%10) && !recorridos.contains(""+aux/10)){
+           
+                Nodo A = nuevosNodos.get(x);
+                Nodo B = nuevosNodos.get(y);
+                if(!recorridos.contains(""+x) && !recorridos.contains(""+y)){
+                    crearNuevaArista(nArista++, A, B, " Nodo conectado " + A.obtenIdentificador() + " Nodo " + B.obtenIdentificador());  
+                    recorridos.add(""+x);
+                    recorridos.add(""+y);
+                    System.out.println("Los recorridos "+recorridos);
+                    // System.out.println("AA");
+                }
+                else if (recorridos.contains(""+x) && !recorridos.contains(""+y)){
+                    crearNuevaArista(nArista++, A, B, " Nodo conectado " + A.obtenIdentificador() + " Nodo " + B.obtenIdentificador());  
+                    recorridos.add(""+x);
+                    recorridos.add(""+y);
+                    System.out.println("Los recorridos "+recorridos);
+                    // System.out.println("BB");
+                }
+                
+                else if (!recorridos.contains(""+x) && recorridos.contains(""+y)){
+                    crearNuevaArista(nArista++, A, B, " Nodo conectado " + A.obtenIdentificador() + " Nodo " + B.obtenIdentificador());  
+                    recorridos.add(""+x);
+                    recorridos.add(""+y);
+                    System.out.println("Los recorridos "+recorridos);                    
+                     //System.out.println("CC");
+                }   
+                
+               
+            //}
+        }
+
+        //------------------Pinta-------------------------------------
+        JFileChooser fc = new JFileChooser();
+            if (fc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+                nombre = fc.getCurrentDirectory().toString() + "\\" + fc.getSelectedFile().getName();
+                HashMap<Integer, Arista> EG = grafo.obtenNuevasAristas();
+                try (FileWriter fw = new FileWriter(nombre+".gv");
+                        BufferedWriter bw = new BufferedWriter(fw);
+                        PrintWriter out = new PrintWriter(bw)) {
+
+                        out.println("strict graph{");
+                        out.flush();
+
+                Set setE = EG.entrySet();
+                Iterator itera = setE.iterator();
+                while(itera.hasNext()) {
+                    Map.Entry mentry = (Map.Entry)itera.next();
+                    Arista arista = (Arista)mentry.getValue();
+                    HashMap<Integer, Nodo> anode = arista.obtenNodo();
+                    Nodo a = anode.get(1);
+                    Nodo b = anode.get(2);
+
+                    String oPeso = Integer.toString(a.obtenIdentificador())+"-"+ Integer.toString(b.obtenIdentificador());
+                    if (pesoAristaKruskal.get(oPeso) != null)
+                        out.println("   \"" + a.obtenIdentificador()+"\"--\"" + b.obtenIdentificador()+ "\"[label = \""+ pesoArista.get(oPeso) + "\"]");
+                    else{
+                        oPeso = Integer.toString(b.obtenIdentificador())+"-"+ Integer.toString(a.obtenIdentificador());
+                        out.println("   \"" + a.obtenIdentificador()+"\"--\"" + b.obtenIdentificador() +"\"[label = \""+ pesoArista.get(oPeso) + "\"]");
+                    }
+                    pesoTotal += pesoArista.get(oPeso);
+                    out.flush();
+                }
+                out.println("labelloc=\"t\"\nlabel=\"Peso total Kruskal= "+pesoTotal+"\"");
+                out.println("}");
+                out.close();
+                JOptionPane.showMessageDialog(null, "El grafo se guardará en: " + nombre + ".gv", "Atención", JOptionPane.INFORMATION_MESSAGE);
+
+
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(null, "No es posible guardar el grafo en la ruta: " + nombre + ".gv", "Error", JOptionPane.INFORMATION_MESSAGE);
+
+                    return 1;
+
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "No fue posible guardar el grafo.", "Error", JOptionPane.INFORMATION_MESSAGE);
+            }
+        return 1;
+    }
+    
  
+    
+    public int BFS_Kruskal_I (Metodo grafo, int s){
+        LinkedList<String> Visitados = new LinkedList();
+        LinkedList<String> Q = new LinkedList();
+        //nuevasAristas.clear();  
+        Aristas.clear();
+        nuevosNodos.putAll(Nodos);
+        int j = 0, l = 0;
+        Nodo A = nuevosNodos.get(s);
+        while(A.obtenGrado() == 0){
+            s++;
+            A = nuevosNodos.get(s);
+        }
+        Q.add(""+A.obtenIdentificador());       
+        crearNuevoNodo(j, "Nodo " +j, " Sin datos ");  
+        while (!Q.isEmpty()){
+            for (int i = 0; i < nuevosNodos.size(); i++){
+                if(A.nodoProximo.containsKey(i) && !Q.contains(""+i))
+                    if(!Visitados.contains(""+i)){
+                        Q.add(""+i);                       
+                    }                
+            }
+            if(!Q.isEmpty())
+                j = Integer.parseInt(Q.pollFirst());
+            Visitados.add(""+j);
+            if(!Q.isEmpty()){
+                A = nuevosNodos.get(Integer.parseInt(Q.get(0)));
+            }            
+        }
+        //System.out.println("La lista de visitados es: "+Visitados);
+        if (Visitados.size()== Nodos.size())
+            return 1;    
+        return 0;
+    }
+    
+    
+    
+    
+
+public int Kruskal_I (Metodo grafo) {
+    int conectado = grafo.BFS_Kruskal_I(grafo,0);
+    if (conectado == 0){
+        System.out.println("Grafo desconectado");
+        JOptionPane.showMessageDialog(null, "Grafo desconectado", "Error.", JOptionPane.WARNING_MESSAGE);
+        return 0;  
+    }
+        nuevosNodos.putAll(Nodos);
+        //nuevasAristas.clear();
+        //Nodo A = nuevosNodos.get(a);
+        HashMap<String, Float> pesoAristaKruskalInv = new HashMap<>();
+        LinkedList<String> recupera = new LinkedList();
+        LinkedList<String> recorridos = new LinkedList();
+        //LinkedList<Integer>  conectados = null;
+        int nArista = -1, x = 0, y = 0, pesoTotal = 0;
+        String nombre;
+
+        pesoAristaKruskalInv.putAll(pesoArista);
+        
+        //Ordena Descendente
+        Map<String, Float> pesoDescendente = pesoAristaKruskalInv
+         .entrySet()
+         .stream()
+         .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+         .collect(
+             toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2,
+                 LinkedHashMap::new));
+              
+         Set setG = pesoDescendente.entrySet();
+        Iterator iterador1 = setG.iterator();
+        while(iterador1.hasNext()){
+            Map.Entry me =(Map.Entry)iterador1.next();
+            recupera.add(""+me.getKey());
+            String aux = recupera.pollFirst();
+            //System.out.println ("Auxiliar : "+aux);
+            String[] parte = aux.split("-");
+            x = Integer.parseInt(parte[0]);
+            y = Integer.parseInt(parte[1]);
+            //if(!recorridos.contains(""+aux%10) && !recorridos.contains(""+aux/10)){
+                Nodo A = nuevosNodos.get(x);
+                Nodo B = nuevosNodos.get(y);
+                
+                A.nodoProximo.remove(A.obtenIdentificador());
+                B.nodoProximo.remove(B.obtenIdentificador());
+                
+                conectado = grafo.BFS_Kruskal_I(grafo,A.obtenIdentificador());
+                if (conectado == 1){
+                    //System.out.println("Quitar");
+                }
+                else {
+                    A.nodoProximo.put(B.obtenIdentificador(), B);
+                    B.nodoProximo.put(A.obtenIdentificador(), A);
+                    //System.out.println("No quitar");
+                }  
+        }
+  
+        //------------------Pinta-------------------------------------
+        JFileChooser fc = new JFileChooser();
+            if (fc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+                nombre = fc.getCurrentDirectory().toString() + "\\" + fc.getSelectedFile().getName();
+                HashMap<Integer, Arista> EG = grafo.obtenNuevasAristas();
+                try (FileWriter fw = new FileWriter(nombre+".gv");
+                        BufferedWriter bw = new BufferedWriter(fw);
+                        PrintWriter out = new PrintWriter(bw)) {
+
+                        out.println("strict graph{");
+                        out.flush();
+
+                Set setE = EG.entrySet();
+                Iterator itera = setE.iterator();
+                while(itera.hasNext()) {
+                    Map.Entry mentry = (Map.Entry)itera.next();
+                    Arista arista = (Arista)mentry.getValue();
+                    HashMap<Integer, Nodo> anode = arista.obtenNodo();
+                    Nodo a = anode.get(1);
+                    Nodo b = anode.get(2);
+
+                    String oPeso = Integer.toString(a.obtenIdentificador())+"-"+ Integer.toString(b.obtenIdentificador());
+                    if (pesoAristaKruskalInv.get(oPeso) != null)
+                        out.println("   \"" + a.obtenIdentificador()+"\"--\"" + b.obtenIdentificador()+ "\"[label = \""+ pesoArista.get(oPeso) + "\"]");
+                    else{
+                        oPeso = Integer.toString(b.obtenIdentificador())+"-"+ Integer.toString(a.obtenIdentificador());
+                        out.println("   \"" + a.obtenIdentificador()+"\"--\"" + b.obtenIdentificador() +"\"[label = \""+ pesoArista.get(oPeso) + "\"]");
+                    }
+                    pesoTotal += pesoArista.get(oPeso);
+                    out.flush();
+                }
+                out.println("labelloc=\"t\"\nlabel=\"Peso total Kruskal= "+pesoTotal+"\"");
+                out.println("}");
+                out.close();
+                JOptionPane.showMessageDialog(null, "El grafo se guardará en: " + nombre + ".gv", "Atención", JOptionPane.INFORMATION_MESSAGE);
+
+
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(null, "No es posible guardar el grafo en la ruta: " + nombre + ".gv", "Error", JOptionPane.INFORMATION_MESSAGE);
+
+                    return 1;
+
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "No fue posible guardar el grafo.", "Error", JOptionPane.INFORMATION_MESSAGE);
+            }
+        return 1;
+    }
+    
     
     @Override
     public Object clone(){
